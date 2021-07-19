@@ -5,7 +5,15 @@ const pizzaController = {
   // get all pizzas (GET /api/pizzas)
   getAllPizza(req, res) {
     Pizza.find({})
-      .then(dbPizzaData => res.json(dbPizzaData))
+    // additionally populates field with stored comment associated to pizza
+    .populate({
+      path: 'comments',
+      // "-" is the inverse, selecting everything but __v
+      select: '-__v'
+    })
+    .select('-__v')
+    .sort({ _id: -1 })
+    .then(dbPizzaData => res.json(dbPizzaData))
       .catch(err => {
         console.log(err);
         res.status(400).json(err);
@@ -13,10 +21,16 @@ const pizzaController = {
   },
 
   // get one pizza by id
+  // get one pizza by id
   getPizzaById({ params }, res) {
     Pizza.findOne({ _id: params.id })
+      .populate({
+        path: 'comments',
+        select: '-__v'
+      })
+      .select('-__v')
+      // do not need ".sort()" method here because we'd only be sorting a single pizza
       .then(dbPizzaData => {
-        // If no pizza is found, send 404
         if (!dbPizzaData) {
           res.status(404).json({ message: 'No pizza found with this id!' });
           return;
